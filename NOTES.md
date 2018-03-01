@@ -66,4 +66,4 @@ You should be able to log in as any of the users defined in `SEED_USERS` in your
 * Ensure that database seed job runs correctly (e.g. all dependencies present)
 * Refactor `nest_py/knoweng/jobs/chronos_job.py` into a base class and similar `kubernetes_job.py`
 * Explore database locking techniques in Python
-** `app2` appears to startup multiple times in rapid succession, causing a race condition
+    * `app2` appears to startup multiple times in rapid succession, causing a race condition
