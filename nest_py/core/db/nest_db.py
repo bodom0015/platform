@@ -1,3 +1,4 @@
+import os
 
 from datetime import datetime
 
@@ -11,14 +12,14 @@ def generate_db_config(project_env=None, runlevel=None):
     if runlevel is None:
         runlevel = RunLevel.development_instance()
     config = {
-        "user":"nest",
-        "port": 5432, #exported in docker startup
-        "password":"GARBAGESECRET",
-        "db_name":"nest",
+        "user":os.getenv('POSTGRES_USERNAME', "nest"),
+        "port": os.getenv('POSTGRES_PORT', 5432), #exported in docker startup
+        "password":os.getenv('POSTGRES_PASSWORD', "GARBAGESECRET"),
+        "db_name":os.getenv('POSTGRES_DATABASE', "nest"),
         #"verbose_logging":True
         "verbose_logging":False
     }
-    host = NestSite.localhost_instance().get_server_ip_address()
+    host = os.getenv('POSTGRES_HOST', NestSite.localhost_instance().get_server_ip_address())
     config['host'] = host
     return config
 

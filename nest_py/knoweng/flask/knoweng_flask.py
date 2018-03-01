@@ -1,3 +1,4 @@
+import os
 
 from nest_py.core.flask.nest_endpoints.nest_endpoint_set import NestEndpointSet
 
@@ -23,6 +24,10 @@ from nest_py.knoweng.flask.nest_endpoints.file_downloads_endpoint import FileDow
 import nest_py.knoweng.flask.nest_endpoints.jobs_endpoints as jobs_endpoints
 import nest_py.knoweng.flask.nest_endpoints.files_endpoints as files_endpoints
 import nest_py.knoweng.flask.nest_endpoints.projects_endpoints as projects_endpoints
+
+import nest_py.core.db.db_ops_utils as db_ops_utils
+from nest_py.nest_envs import ProjectEnv, RunLevel
+from nest_py.ops.seed_ops import _run_seed_cmd
 
 def get_nest_endpoints(db_engine, sqla_metadata, authenticator):
     all_eps = NestEndpointSet()
@@ -73,6 +78,20 @@ def get_nest_endpoints(db_engine, sqla_metadata, authenticator):
     ##LOGIN
     sessions_endpoint = SessionsEndpoint(authenticator)
     all_eps.add_endpoint(sessions_endpoint)
+
+    project_env_str = os.getenv('PROJECT_ENV', 'knoweng')
+    runlevel_str = os.getenv('NEST_RUNLEVEL', 'development')
+
+    project_env = ProjectEnv(project_env_str)
+    runlevel = RunLevel(runlevel_str)
+
+    #FIXME: lock DB to prevent duplication errors
+    db_ops_utils.ensure_tables_in_db()
+    db_ops_utils.seed_users(project_env, runlevel)
+    exit_code = _run_seed_cmd({ 'project': project_env_str })
+
+    if exit_code != 0:
+        print('WARNING: non-zero exit code from seed command:' + exit_code)
 
     return all_eps
 

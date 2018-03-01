@@ -64,7 +64,7 @@ def _generate_base_config():
     #TODO: break this up by component that uses them. 
     #Hard to know what is still being used like this
     config = {
-        "SECRET_KEY": 'GARBAGESECRET',
+        "SECRET_KEY": os.getenv('SECRET_KEY', 'GARBAGESECRET'),
         # APP_DIR is this directory
         "APP_DIR": os.path.abspath(os.path.dirname(__file__)),
         "PROJECT_ROOT": os.path.abspath(
@@ -73,7 +73,7 @@ def _generate_base_config():
         "BCRYPT_LOG_ROUNDS": 13,
         "DEBUG_TB_ENABLED": False,  # Disable Debug toolbar
         "DEBUG_TB_INTERCEPT_REDIRECTS": False,
-        "REDIS_HOST": 'redis',
+        "REDIS_HOST": os.getenv('REDIS_HOST', 'redis'),
         "PAGINATION_LIMIT": 100, #TODO: start using this again
         "PAGINATION_DEFAULT": 100,
         "XML": False, # JSON only
@@ -85,7 +85,7 @@ def _generate_base_config():
         "USERFILES_DIR": "/userfiles",
         "DEFAULT_CLOUD": "aws", # TODO KNOW-112 knoweng only? or not even there?
         "AUTHENTICATION_STRATEGY": 'nest_py.core.flask.accounts.authentication.NativeAuthenticationStrategy',
-        "JWT_SECRET": "GARBAGESECRET", # TODO reject default in production
+        "JWT_SECRET": os.getenv('JWT_SECRET', "GARBAGESECRET"), # TODO reject default in production
         "JWT_ISSUER": "NEST_DEMO_CHANGE_IN_PRODUCTION", # TODO reject default in production
         "JWT_AUDIENCES": ["NEST_DEMO_CHANGE_IN_PRODUCTION"], # TODO reject default in production
         "JWT_LIFESPAN": timedelta(days=365)

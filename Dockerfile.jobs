@@ -1,0 +1,51 @@
+FROM python:2.7
+
+# Install package dependencies for jobs
+RUN apt-get -qq update && \
+    apt-get -qq install \
+      pkg-config \
+      libpng-dev \
+      libfreetype6-dev \
+      libblas-dev \
+      liblapack-dev \
+      gfortran \
+      libatlas-base-dev \
+      libhdf5-dev \
+      python-tk \
+      libffi-dev \
+      libssl-dev && \
+    apt-get -qq clean all && \
+    apt-get -qq autoclean && \
+    apt-get -qq autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+# Configure our app's expected working directory
+ENV BASEDIR="/app" \
+    PYTHONPATH="$BASEDIR"
+WORKDIR $BASEDIR/
+
+# Install Python dependencies for jobs (1/2)
+# force setuptools v33; newer versions will fail https://github.com/pypa/setuptools/issues/937
+# alternative is to update pip, but that requires updating python (otherwise we
+# hit security errors), and that's complicated, because ubuntu 14.04 locks in
+# 2.7.6
+COPY requirements $BASEDIR/requirements/
+RUN pip --no-cache-dir install -q setuptools==33.1.1
+RUN pip --no-cache-dir install -q numpy==1.11.3
+RUN pip --no-cache-dir install -q -r requirements/nest_jobs.txt
+
+# Install Python dependencies for jobs (2/2)
+#The following pip packages do not declare their dependencies properly, and
+#therefore cannot reliably be installed from the requirements txt files.
+# (pip does not install in the order declared in the file, but rather
+# an ordering based on installing the order to resolve dependencies)
+RUN pip --no-cache-dir install -q biom-format==2.1.5
+RUN pip --no-cache-dir install -q h5py==2.5.0
+
+# Copy in full app source
+#COPY data/projects/knoweng/networks/ /networks
+#COPY data/projects/knoweng/zip_readmes/ /pipeline_readmes
+COPY . $BASEDIR/
+
+# Define our jobs worker entrypoint
+ENTRYPOINT ["python","-m","nest_py.knoweng.jobs.worker_app"]

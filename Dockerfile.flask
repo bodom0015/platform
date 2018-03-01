@@ -1,0 +1,54 @@
+FROM bodom0015/uwsgi-nginx-flask:latest
+
+# Install package dependencies
+RUN apt-get -qq update && \
+    apt-get -qq install --no-install-recommends \
+      build-essential \
+      curl \
+      libpq-dev \
+      python-dev \
+      sudo && \
+    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash - && \
+    apt-get -qq update && \
+    apt-get -qq install nodejs && \
+    apt-get -qq clean all && \
+    apt-get -qq autoclean && \
+    apt-get -qq autoremove && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g gulp@3.9.0
+
+# Configure/clear flask working directory
+ENV BASEDIR="/code_live"
+WORKDIR $BASEDIR/
+
+# Install Python dependencies
+RUN pip --no-cache-dir install -q setuptools==33.1.1
+ADD ./requirements/ $BASEDIR/requirements
+RUN pip --no-cache-dir install -q -r requirements/nest_flask.txt
+
+# Required to run database seed job
+#RUN pip --no-cache-dir install -q biom-format==2.1.5 h5py==2.5.0
+
+RUN rm -rf /app/*
+
+# Copy in our app source and config files
+#COPY data/projects/knoweng/demo_files/*.txt /demo_files/
+COPY nest_flask_etc/uwsgi/uwsgi.ini /etc/uwsgi/uwsgi.ini
+COPY nest_flask_etc/nginx/ /etc/nginx/
+COPY nest_flask_etc/supervisor/ /etc/supervisor/
+COPY client $BASEDIR/client
+
+# Build UI from source
+RUN cd $BASEDIR/client/ && \
+    npm install && \
+    gulp dist && \
+    cd $BASEDIR/
+
+COPY . $BASEDIR/
+
+# Set runtime environment options
+ENV PROJECT_ENV="knoweng" \
+    NEST_RUNLEVEL="development"
+
+ENTRYPOINT [ "./entrypoint.sh" ]

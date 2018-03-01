@@ -1,4 +1,5 @@
-        
+import os        
+
 def generate_project_params(runlevel):
     
     params = {
@@ -23,22 +24,41 @@ def generate_project_params(runlevel):
     return params
 
 def generate_project_users(runlevel):
+    # Expected encoding: 'fakeuser:GARBAGESECRET:False;fakeadmin:GARBAGESECRET:True'
+    users_encoded = os.getenv('SEED_USERS', '')
+
+    users = []
     origin = 'nest'
-    users = [
-        {
-            'username': 'fakeuser',
-            'password': 'GARBAGESECRET',
-            'given_name': 'Fake',
-            'family_name': 'User',
-            'origin': origin,
-            'is_superuser': False
-        },{
-            'username': 'fakeadmin',
-            'password': 'GARBAGESECRET',
-            'given_name': 'Fake',
-            'family_name': 'Admin',
-            'origin': origin,
-            'is_superuser': True
-        },
-        ]
+    if runlevel == 'production':
+        return users
+    elif users_encoded == '':
+        return users
+    else:
+        try:
+            users_str_arr = users_encoded.split(';')
+            for user_str in users_str_arr:
+                user_fields = user_str.split(':')
+                user_name = "fakeuser"
+                user_pass = "GARBAGESECRET"
+                is_su = False
+                if len(user_fields) == 0:
+                   print('improperly encoded user_str... skipping: ' + user_str)
+                   continue
+                if len(user_fields) >= 1:
+                   user_name = user_fields[0]
+                if len(user_fields) >= 2:
+                   user_pass = user_fields[1]
+                if len(user_fields) >= 3:
+                   if user_fields[2] == 'True':
+                       is_su = True
+                users.append({
+                    'username': user_name,
+                    'password': user_pass,
+                    'given_name': 'Fake',
+                    'family_name': "Admin" if is_su else "User",
+                    'origin': origin,
+                    'is_superuser': is_su
+                })
+        except ValueError:
+            print('improperly encoded SEED_USERS: ' + users_encoded)
     return users
