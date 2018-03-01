@@ -41,6 +41,11 @@ docker run -it --rm --name flask2 \
     -e POSTGRES_HOST="postgres" \
     -e POSTGRES_PORT="5432" \
     -e POSTGRES_DATABASE="nest" \
+    -e AWS_SHARED_MNT_PATH="/mnt/knowdev/YOUR_NETID" \
+    -e AWS_MESOS_MASTER="fixme.yourhost.com:4400" \
+    -e AWS_REDIS_HOST="fixme.yourhost.com" \
+    -e AWS_REDIS_PORT="6379" \
+    -e AWS_REDIS_PASS="GARBAGE_SECRET" \
     -e SEED_USERS="fakeuser:GARBAGE_SECRET:False;fakeadmin:GARBAGE_SECRET:True" \
     nest/nest:flask
 ```

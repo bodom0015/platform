@@ -17,20 +17,20 @@ class ChronosJob(object):
 
     # TODO move into config
     cloud_mesos_dict = {
-        'aws': 'fixme.yourhost.com:4400'
+        'aws': os.getenv('AWS_MESOS_MASTER', 'fixme.yourhost.com:4400')
     }
     """Map from cloud name to mesos host."""
     # TODO move into config
     cloud_path_dict = {
-        'aws': '/mnt/knowdev/YOUR_NET_ID'
+        'aws': os.getenv('AWS_SHARED_MNT_PATH', '/mnt/knowdev/YOUR_NET_ID')
     }
     """Map from cloud name to redis host."""
     # TODO move into config
     cloud_redis_dict = {
         'aws': {
-            'host': 'fixme.yourhost.com',
-            'port': 6379,
-            'password': 'GARBAGESECRET'
+            'host': os.getenv('AWS_REDIS_HOST', 'fixme.yourhost.com'),
+            'port': os.getenv('AWS_REDIS_PORT', 6379),
+            'password': os.getenv('AWS_REDIS_PASS', 'GARBAGESECRET')
         }
     }
     """Map from cloud name to top level of worker node storage."""
