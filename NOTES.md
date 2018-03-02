@@ -2,38 +2,43 @@
 An experiment in deploying and seeding the platform in a way that minimizes required human interaction.
 
 # Prerequisites
-* Git
 * Docker
 
-Clone this repository:
-```bash
-git clone https://github.com/knoweng/platform
-cd platform/
-```
-
+# Setup
 Run a postgres:9.6.2 container from the official image:
 ```bash
 docker run -p 5432:5432 -d --name=postgres -e PGDATA="/data/db/postgres" -e POSTGRES_USER="nest" -e POSTGRES_PASSWORD="GARBAGESECRET" postgres:9.6.2
 ```
 
-Optional: Run a redis:3.0.3 container from the official image:
+Untested: Run a redis:3.0.3 container from the official image:
 ```bash
-docker run -p 6379:6379 -d --name=redis redis
+docker run -p 6379:6379 -d --name=redis redis:3.0.3
 ```
 
 NOTE: Both of these containers are started with ephemeral storage (for testing only)
 
-# Build
-Build the two docker images with the following commands:
+# Run
+Untested: Run a test `jobs` container in the background using the precompiled image:
 ```bash
-docker build -t nest/nest:flask -f Dockerfile.flask .
-docker build -t nest/nest:jobs -f Dockerfile.jobs .
+docker run -it -d--name nest_jobs \
+    --link postgres:postgres \
+    --link redis:redis \
+    -e POSTGRES_USERNAME="nest" \
+    -e POSTGRES_PASSWORD="GARBAGESECRET" \
+    -e POSTGRES_HOST="postgres" \
+    -e POSTGRES_PORT="5432" \
+    -e POSTGRES_DATABASE="nest" \
+    -e AWS_SHARED_MNT_PATH="/mnt/knowdev/YOUR_NETID" \
+    -e AWS_MESOS_MASTER="fixme.yourhost.com:4400" \
+    -e AWS_REDIS_HOST="redis" \
+    -e AWS_REDIS_PORT="6379" \
+    -e AWS_REDIS_PASS="" \
+    bodom0015/nest:jobs 
 ```
 
-# Run
-Run a test flask container in the foreground from the image you've just built:
+Then, run a test flask container in the foreground using the other precompiled image:
 ```bash
-docker run -it --rm --name flask2 \
+docker run -it --name nest_flask \
     -p 80:80 -p 443:443 \
     --link postgres:postgres \
     -e POSTGRES_USERNAME="nest" \
@@ -47,8 +52,9 @@ docker run -it --rm --name flask2 \
     -e AWS_REDIS_PORT="6379" \
     -e AWS_REDIS_PASS="GARBAGE_SECRET" \
     -e SEED_USERS="fakeuser:GARBAGE_SECRET:False;fakeadmin:GARBAGE_SECRET:True" \
-    nest/nest:flask
+    bodom0015/nest:flask
 ```
+
 NOTE: the `SEED_USERS` variable is a semi-colon delimited list of users formatted as follows:
 ```
 username:password:is_admin
@@ -60,6 +66,15 @@ fakeuser:fakeuser_password:False;fakeadmin:fakeadmin_password:True
 Each time that the container starts up, you should see in the logs that it checks for the existence of the necessary tables in the "nest" database. The tables will be created if they do not already exist.
 
 The `nest_users` table will also be populated with the value you have set above for `SEED_USERS` in your evironment, if they do not already exist in the database.
+
+## Rebuild (optional)
+If you modify the source code and wish to rebuild the two docker images, you can do so using the following commands:
+```bash
+docker build -t bodom0015/nest:flask -f Dockerfile.flask .
+docker build -t bodom0015/nest:jobs -f Dockerfile.jobs .
+```
+
+Then perform a `docker rm` on your existing containers and re-run them using the same commands as above.
 
 # Test
 Navigate to https://localhost/static/index.html in your browser.
