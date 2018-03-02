@@ -20,7 +20,7 @@ NOTE: Both of these containers are started with ephemeral storage (for testing o
 # Run
 Untested: Run a test `jobs` container in the background using the precompiled image:
 ```bash
-docker run -it -d--name nest_jobs \
+docker run -it -d --name nest_jobs \
     --link postgres:postgres \
     --link redis:redis \
     -e POSTGRES_USERNAME="nest" \
